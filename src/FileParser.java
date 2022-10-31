@@ -11,20 +11,26 @@ import java.util.regex.Pattern;
 public class FileParser
 {
 
+    protected String filePath;
+
+    final static protected String FILE_PATH_RESULT = "files/result.csv";
+
     Filter filter;
 
-    public FileParser(Filter filter)
+    public FileParser(String filePath, Filter filter)
     {
+        this.filePath = filePath;
         this.filter = filter;
     }
 
     public void run() throws FileNotFoundException
     {
-        FileReader file = new FileReader("files/full111.txt");
+        FileReader file = new FileReader(this.filePath);
         BufferedReader bufferedReader = new BufferedReader(file);
         boolean skipFirst = true;
         ArrayList<FieldView> dataOut = new ArrayList<>();
-        HashMap<String, String> stringCollection;
+        Integer startLimit = this.filter.getLimit().getStart();
+        Integer endLimit = this.filter.getLimit().getEnd();
         try {
             int lineNumber = 1;
             String dataLine = bufferedReader.readLine();
@@ -34,8 +40,6 @@ public class FileParser
                     dataLine = bufferedReader.readLine();
                     continue;
                 }
-                Integer startLimit = this.filter.getLimit().getStart();
-                Integer endLimit = this.filter.getLimit().getEnd();
                 if (lineNumber < startLimit) {
                     lineNumber++;
                     continue;
@@ -52,18 +56,13 @@ public class FileParser
                 dataOut.add(fieldViewItem);
                 lineNumber++;
                 dataLine = bufferedReader.readLine();
-//                if (lineNumber > 100000) {
-//                    break;
-//                }
             }
             bufferedReader.close();
             System.out.println("Массив с данными создан, элементов: " + dataOut.stream().count());
             try {
-
                 dataOut = this.sorting(dataOut);
                 System.out.println("Массив отсортирован");
-                String pathFile = "files/result.csv";
-                File fileCsv = new File(pathFile);
+                File fileCsv = new File(FILE_PATH_RESULT);
                 if (fileCsv.exists()) {
                     fileCsv.delete();
                 }
@@ -88,6 +87,7 @@ public class FileParser
                     newFile.append(text);
                     newFile.flush();
                 }
+                System.out.println("Данные записаны в файл");
                 newFile.close();
 
             } catch (IOException e) {
@@ -103,7 +103,11 @@ public class FileParser
 
     protected ArrayList<FieldView> sorting(ArrayList<FieldView> data)
     {
-        Comparator lastActiveComparator = new LastActiveComparator(this.filter.getOrder().get(0).getDirect());
+        String direction = "desc";
+        if (!this.filter.getOrder().isEmpty()) {
+            direction = this.filter.getOrder().get(0).getDirect();
+        }
+        Comparator lastActiveComparator = new LastActiveComparator(direction);
         Collections.sort(data, lastActiveComparator);
         return data;
     }
@@ -125,7 +129,7 @@ public class FileParser
         SimpleDateFormat formatterOut = new SimpleDateFormat("dd.MM.Y");
         String lastactiveForView = "";
         // Для сортировки
-        long lastActiveToSort = -1;
+        long lastActiveToSort = 1;
         int regIndex = 1;
         while (matcher.find()) {
             if (regIndex == 2) {
@@ -156,14 +160,16 @@ public class FileParser
         Double fun3 = this.getFloatValue(stringCollection[9]);
 
         Double sumFun = fun1 + fun2 + fun3;
-        if (!this.chooseByFilter(Registry.Filter.COUNTRY_CODE, result.getCountryCode())) {
-            return new FieldView();
-        }
-        if (!this.chooseByFilter(Registry.Filter.FUN, sumFun)) {
-            return new FieldView();
-        }
-        if (!this.chooseByFilter(Registry.Filter.TOTAL_DEPOSIT, totalDeposit)) {
-            return new FieldView();
+        if (this.filter.getFields().size() > 0) {
+            if (!this.chooseByFilter(Registry.Filter.COUNTRY_CODE, result.getCountryCode())) {
+                return new FieldView();
+            }
+            if (!this.chooseByFilter(Registry.Filter.FUN, sumFun)) {
+                return new FieldView();
+            }
+            if (!this.chooseByFilter(Registry.Filter.TOTAL_DEPOSIT, totalDeposit)) {
+                return new FieldView();
+            }
         }
         return result;
     }
