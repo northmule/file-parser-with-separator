@@ -4,9 +4,13 @@ import Registry.Filter;
 
 public class Order
 {
-
+    /**
+     * Поле для сортировки
+     */
     protected String field;
-
+    /**
+     * Направление сортировки
+     */
     protected String direct;
 
     public Order(String field, String direct)

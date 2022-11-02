@@ -30,6 +30,17 @@ public class Main
     public void appRun(String[] args)
     {
 
+        if (!this.debugFilter && args.length == 0) {
+            System.out.println("Укажите параметры для обработки:");
+            System.out.println("\tcountry_code=UM:RU:BY фильтр по странам, страны разделяются через двойную точку");
+            System.out.println("\ttotaldeposit=1 выбираются значения большие чем");
+            System.out.println("\tfun=1 выбираются значения большие чем");
+            System.out.println("\tlimit=0-15 выбираются записи с 0 позиции по 15-ю");
+            System.out.println("\tlastactive=desc сортировка по последней активности (desc или asc направление сортировки)");
+            System.out.println("Параметры можно указывать в любом порядке, так же их можно пропускать");
+            return;
+        }
+
         Filter filter = new Filter(new ArrayList(), new ArrayList(), new Limit());
         for(int i = 0; i < args.length; i++) {
             String paramLine = args[i];
@@ -59,14 +70,15 @@ public class Main
 
         }
         if (this.debugFilter && args.length == 0) {
-            filter.getFields().add((new Field("country_code", "UM")));
-            filter.getFields().add((new Field("country_code", "BY")));
-            filter.getFields().add((new Field("country_code", "RU")));
-            filter.getFields().add((new Field("country_code", "US")));
-            filter.getFields().add((new Field("fun", "0")));
-            filter.getFields().add((new Field("totaldeposit", "0")));
-            filter.getOrder().add(new Order("Lastactive", "asc"));
-            filter.setLimit(new Limit(0, 100000));
+            filter.getFields().add((new Field("country_code", "CA")));
+            filter.getFields().add((new Field("country_code", "DE")));
+//            filter.getFields().add((new Field("country_code", "BY")));
+//            filter.getFields().add((new Field("country_code", "RU")));
+//            filter.getFields().add((new Field("country_code", "US")));
+//            filter.getFields().add((new Field("fun", "0")));
+//            filter.getFields().add((new Field("totaldeposit", "0")));
+//            filter.getOrder().add(new Order("Lastactive", "asc"));
+//            filter.setLimit(new Limit(0, 100000));
         }
         FileParser fileParser = new FileParser("files/full111.txt", filter);
         try {

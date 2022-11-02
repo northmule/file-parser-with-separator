@@ -2,9 +2,13 @@ package Filters;
 
 public class Field
 {
-
+    /**
+     * Имя параметра
+     */
     protected String name;
-
+    /**
+     * Значение параметра
+     */
     protected String value;
 
     public Field(String name, String value)

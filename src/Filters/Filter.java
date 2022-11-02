@@ -4,11 +4,18 @@ import java.util.ArrayList;
 
 public class Filter
 {
-
+    /**
+     * Все поля для отбора
+     */
     protected ArrayList<Field> fields;
-
+    /**
+     * Поля для сортировки
+     */
     protected ArrayList<Order> order;
 
+    /**
+     * Лимит на выборку
+     */
     protected Limit limit;
 
     public Filter(ArrayList<Field> fields, ArrayList<Order> order, Limit limit)

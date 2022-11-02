@@ -32,11 +32,11 @@ public class FileParser
         Integer startLimit = this.filter.getLimit().getStart();
         Integer endLimit = this.filter.getLimit().getEnd();
         try {
-            int lineNumber = 1;
+            int lineNumber = 0;
             String dataLine = bufferedReader.readLine();
             while (dataLine != null) {
-                if (skipFirst && lineNumber == 1) {
-                    lineNumber++;
+                if (skipFirst) {
+                    skipFirst = false;
                     dataLine = bufferedReader.readLine();
                     continue;
                 }
@@ -44,7 +44,7 @@ public class FileParser
                     lineNumber++;
                     continue;
                 }
-                if (lineNumber >= endLimit) {
+                if (lineNumber > endLimit) {
                     break;
                 }
                 FieldView fieldViewItem = this.parsingByLine(dataLine);
@@ -101,6 +101,12 @@ public class FileParser
 
     }
 
+    /**
+     * Сортирует обработанные данные перед записью в файл
+     *
+     * @param data Выбранные данные
+     * @return Отсортированные данные
+     */
     protected ArrayList<FieldView> sorting(ArrayList<FieldView> data)
     {
         String direction = "desc";
@@ -177,34 +183,45 @@ public class FileParser
     // Фильтрует
     private boolean chooseByFilter(String column, String value)
     {
+        Boolean result = true;
         value = value.toLowerCase();
         if (column.equals(Registry.Filter.COUNTRY_CODE)) {
+            result = false;
             ArrayList<Field> fieldsFilter = this.filter.getFields();
+            if (fieldsFilter.size() == 0) {
+                result = true;
+            }
             for (int i = 0; i < fieldsFilter.size(); i++) {
                 Field field = fieldsFilter.get(i);
-                if (field.getName().equals(column) && field.getValue().equals(value)) {
-                    return true;
+                String fieldName = field.getName();
+                String fieldValue = field.getValue();
+                if (fieldName.equals(column)) {
+                    if (fieldValue.equals(value)) {
+                        result = true;
+                    }
+
                 }
             }
         }
-        return false;
+        return result;
     }
 
     private boolean chooseByFilter(String column, Double value)
     {
+        Boolean result = true;
         if (column.equals(Registry.Filter.FUN) || column.equals(Registry.Filter.TOTAL_DEPOSIT)) {
             ArrayList<Field> fieldsFilter = this.filter.getFields();
             for (int i = 0; i < fieldsFilter.size(); i++) {
                 Field field = fieldsFilter.get(i);
-                if (!field.getName().equals(column)) {
-                    continue;
+                String fieldName = field.getName();
+                String fieldValue = field.getValue();
+                if (fieldName.equals(column)) {
+                    Double filterValue = this.getFloatValue(fieldValue);
+                    result = value >= filterValue;
                 }
-                Double filterValue = this.getFloatValue(field.getValue());
-                return value >= filterValue;
             }
-
         }
-        return false;
+        return result;
     }
 
 
