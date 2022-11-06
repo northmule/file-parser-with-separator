@@ -1,5 +1,7 @@
+import Exceptions.VariablesExceptions;
 import Filters.Field;
 import Filters.Filter;
+import Settings.Common;
 
 import java.io.*;
 import java.text.ParseException;
@@ -13,19 +15,19 @@ public class FileParser
 
     protected String filePath;
 
-    final static protected String FILE_PATH_RESULT = "files/result.csv";
+    Common settings;
 
     Filter filter;
 
-    public FileParser(String filePath, Filter filter)
+    public FileParser(Filter filter, Common settings)
     {
-        this.filePath = filePath;
         this.filter = filter;
+        this.settings = settings;
     }
 
     public void run() throws FileNotFoundException
     {
-        FileReader file = new FileReader(this.filePath);
+        FileReader file = new FileReader(settings.getFolderPath() + "/" + settings.getIncomingNameFile());
         BufferedReader bufferedReader = new BufferedReader(file);
         boolean skipFirst = true;
         ArrayList<FieldView> dataOut = new ArrayList<>();
@@ -62,7 +64,7 @@ public class FileParser
             try {
                 dataOut = this.sorting(dataOut);
                 System.out.println("Массив отсортирован");
-                File fileCsv = new File(FILE_PATH_RESULT);
+                File fileCsv = new File(settings.getFolderPath() + "/" + settings.getOutputNameFile());
                 if (fileCsv.exists()) {
                     fileCsv.delete();
                 }
@@ -167,61 +169,72 @@ public class FileParser
 
         Double sumFun = fun1 + fun2 + fun3;
         if (this.filter.getFields().size() > 0) {
-            if (!this.chooseByFilter(Registry.Filter.COUNTRY_CODE, result.getCountryCode())) {
+            if (this.filter.existCountyCode() && !this.chooseByFilter(Registry.Filter.COUNTRY_CODE, result.getCountryCode())) {
                 return new FieldView();
             }
-            if (!this.chooseByFilter(Registry.Filter.FUN, sumFun)) {
+            if (this.filter.existFun() && !this.chooseByFilter(Registry.Filter.FUN, sumFun)) {
                 return new FieldView();
             }
-            if (!this.chooseByFilter(Registry.Filter.TOTAL_DEPOSIT, totalDeposit)) {
+            if (this.filter.existTotalDeposit() && !this.chooseByFilter(Registry.Filter.TOTAL_DEPOSIT, totalDeposit)) {
                 return new FieldView();
             }
         }
         return result;
     }
 
-    // Фильтрует
+    /**
+     * Фильтр строки
+     * @param column имя колонки
+     * @param value значение для сверки с фильтрами
+     * @return true значение добавляется в выборку
+     */
     private boolean chooseByFilter(String column, String value)
     {
-        Boolean result = true;
         value = value.toLowerCase();
         if (column.equals(Registry.Filter.COUNTRY_CODE)) {
-            result = false;
-            ArrayList<Field> fieldsFilter = this.filter.getFields();
-            if (fieldsFilter.size() == 0) {
-                result = true;
-            }
+            ArrayList<Field> fieldsFilter = this.filter.getFieldsByType(Registry.Filter.COUNTRY_CODE);
             for (int i = 0; i < fieldsFilter.size(); i++) {
                 Field field = fieldsFilter.get(i);
-                String fieldName = field.getName();
                 String fieldValue = field.getValue();
-                if (fieldName.equals(column)) {
-                    if (fieldValue.equals(value)) {
-                        result = true;
-                    }
-
+                if (fieldValue.equals(value)) {
+                    return true;
                 }
             }
         }
-        return result;
+        return false;
     }
 
+    /**
+     * Фильтр строки
+     * @param column имя колонки
+     * @param value значение для сверки с фильтрами
+     * @return true значение добавляется в выборку
+     */
     private boolean chooseByFilter(String column, Double value)
     {
-        Boolean result = true;
-        if (column.equals(Registry.Filter.FUN) || column.equals(Registry.Filter.TOTAL_DEPOSIT)) {
-            ArrayList<Field> fieldsFilter = this.filter.getFields();
-            for (int i = 0; i < fieldsFilter.size(); i++) {
-                Field field = fieldsFilter.get(i);
-                String fieldName = field.getName();
-                String fieldValue = field.getValue();
-                if (fieldName.equals(column)) {
+        try {
+            if (column.equals(Registry.Filter.FUN) || column.equals(Registry.Filter.TOTAL_DEPOSIT)) {
+                ArrayList<Field> fieldsFilter = new ArrayList();
+                if (column.equals(Registry.Filter.FUN)) {
+                    fieldsFilter = this.filter.getFieldsByType(Registry.Filter.FUN);
+                } else if (column.equals(Registry.Filter.TOTAL_DEPOSIT)) {
+                    fieldsFilter = this.filter.getFieldsByType(Registry.Filter.TOTAL_DEPOSIT);
+                } else {
+                    throw VariablesExceptions.variableIsNotExpected();
+                }
+
+                for (int i = 0; i < fieldsFilter.size(); i++) {
+                    Field field = fieldsFilter.get(i);
+                    String fieldValue = field.getValue();
                     Double filterValue = this.getFloatValue(fieldValue);
-                    result = value >= filterValue;
+                    return value >= filterValue;
                 }
             }
+        } catch (Throwable e) {
+            System.out.println(e.getMessage());
         }
-        return result;
+
+        return false;
     }
 
 

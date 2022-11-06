@@ -1,11 +1,20 @@
+import Exceptions.FileDoesNotExist;
 import Filters.Field;
 import Filters.Filter;
 import Filters.Limit;
 import Filters.Order;
+import Settings.Common;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class Main
 {
+    /**
+     * false для работы из консоли
+     */
     protected Boolean debugFilter = false;
 
     /**
@@ -70,26 +79,54 @@ public class Main
 
         }
         if (this.debugFilter && args.length == 0) {
-            filter.getFields().add((new Field("country_code", "CA")));
-            filter.getFields().add((new Field("country_code", "DE")));
+//            filter.getFields().add((new Field("country_code", "CA")));
+//            filter.getFields().add((new Field("country_code", "DE")));
 //            filter.getFields().add((new Field("country_code", "BY")));
 //            filter.getFields().add((new Field("country_code", "RU")));
 //            filter.getFields().add((new Field("country_code", "US")));
-//            filter.getFields().add((new Field("fun", "0")));
-//            filter.getFields().add((new Field("totaldeposit", "0")));
-//            filter.getOrder().add(new Order("Lastactive", "asc"));
-//            filter.setLimit(new Limit(0, 100000));
+            filter.getFields().add((new Field("fun", "1")));
+            filter.getFields().add((new Field("totaldeposit", "56")));
+            filter.getOrder().add(new Order("Lastactive", "desc"));
+            filter.setLimit(new Limit(0, 100000));
         }
-        FileParser fileParser = new FileParser("files/full111.txt", filter);
         try {
+            Common settings = this.getSettings();
+            FileParser fileParser = new FileParser(filter, settings);
             fileParser.run();
         } catch (Exception e) {
-            System.out.println("Файл не прочитан:" + e.toString());
+            System.out.println(e.getMessage());
         }
-        return;
+
     }
 
+    /**
+     *
+     * @return вернёт объект настроек
+     */
+    protected Common getSettings() throws IOException
+    {
+        File settings = new File("settings.json");
+        ObjectMapper mapper = new ObjectMapper();
+        if (!settings.exists()) {
+            settings.createNewFile();
+            mapper.writeValue(settings, new Common());
+        }
+        Common settingsData = mapper.readValue(settings, Common.class);
+        File filePath = new File(settingsData.getFolderPath());
+        if (!filePath.exists()) {
+            filePath.mkdirs();
+        }
+        File incomingNameFile = new File(settingsData.getFolderPath() + "/" + settingsData.getIncomingNameFile());
+        try {
+            if (!incomingNameFile.exists()) {
+                throw FileDoesNotExist.fileNotFound(settingsData.getFolderPath() + "/" + settingsData.getIncomingNameFile());
+            }
+        } catch (Throwable e) {
+            throw new RuntimeException(e.getMessage());
+        }
 
+        return settingsData;
+    }
 
 }
 

@@ -54,4 +54,62 @@ public class Filter
     {
         this.limit = limit;
     }
+
+    /**
+     * @return true - установлен код фильтра по стране
+     */
+    public Boolean existCountyCode()
+    {
+        for (int i = 0; i < this.fields.size(); i++) {
+            Field field = this.fields.get(i);
+            if (field.getName().equals(Registry.Filter.COUNTRY_CODE)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @return true - установлен код фильтра по fun
+     */
+    public Boolean existFun()
+    {
+        for (int i = 0; i < this.fields.size(); i++) {
+            Field field = this.fields.get(i);
+            if (field.getName().equals(Registry.Filter.FUN)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @return true - установлен код фильтра по стране
+     */
+    public Boolean existTotalDeposit()
+    {
+        for (int i = 0; i < this.fields.size(); i++) {
+            Field field = this.fields.get(i);
+            if (field.getName().equals(Registry.Filter.TOTAL_DEPOSIT)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     *
+     * @param type тип фильтра из констант
+     * @return отобранные поля по типу
+     */
+    public ArrayList<Field> getFieldsByType(String type)
+    {
+        ArrayList<Field> fields = new ArrayList<>();
+        for (int i = 0; i < this.fields.size(); i++) {
+            if (this.fields.get(i).getName().equals(type)) {
+                fields.add(this.fields.get(i));
+            }
+        }
+        return fields;
+    }
 }
